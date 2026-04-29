@@ -1,17 +1,31 @@
-# app_vibracao
+#  Monitor de Vibração Industrial
 
-A new Flutter project.
+Aplicativo mobile desenvolvido em Flutter para o monitoramento em tempo real de equipamentos industriais e prevenção de falhas, focado na leitura de telemetrias de vibração via sensores.
 
-## Getting Started
+##  Funcionalidades
 
-This project is a starting point for a Flutter application.
+* **Autenticação Segura e RBAC:** Sistema de login integrado ao Firebase Authentication, com persistência local (Auto-login) e Controle de Acesso Baseado em Funções (Gerentes possuem permissão para gerenciar ativos; Operadores possuem acesso de visualização).
+* **Monitoramento em Tempo Real:** Conexão direta com sensores (ESP32/Node.js) através de WebSockets para recebimento de telemetria de vibração sem latência.
+* **Gestão de Ativos Industriais:** Operações completas de CRUD (Criar, Ler, Atualizar, Deletar) no Firestore para registro de máquinas, vinculando endereços MAC, nomes e setores de operação.
+* **Histórico de Alertas:** Registro em memória de picos de vibração e eventos críticos classificados como emergência pela API.
 
-A few resources to get you started if this is your first Flutter project:
+##  Tecnologias Utilizadas
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+* **Frontend Mobile:** Flutter & Dart
+* **Gerenciamento de Estado:** Provider (Arquitetura orientada a Repositórios)
+* **Backend as a Service (BaaS):** Firebase (Auth e Cloud Firestore)
+* **Comunicação:** `web_socket_channel` para comunicação bidirecional de baixa latência
+* **Segurança:** Gestão de variáveis sensíveis via `flutter_dotenv`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+##  Como executar o projeto localmente
+
+### Pré-requisitos
+* Flutter SDK instalado na máquina.
+* Conta no Firebase com projeto configurado (Auth e Firestore ativados).
+* API Node.js/ESP32 configurada para transmissão via WebSocket.
+
+### Passo a Passo
+
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/SEU_USUARIO/app_vibracao.git](https://github.com/SEU_USUARIO/app_vibracao.git)
