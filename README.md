@@ -28,4 +28,4 @@ Aplicativo mobile desenvolvido em Flutter para o monitoramento em tempo real de 
 
 1. **Clone o repositório:**
    ```bash
-   git clone [https://github.com/SEU_USUARIO/app_vibracao.git](https://github.com/SEU_USUARIO/app_vibracao.git)
+   git clone https://github.com/FabioCoral/App_Vibracao.git
