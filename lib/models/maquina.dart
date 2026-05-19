@@ -12,8 +12,8 @@ class Maquina {
   });
 
   String get status {
-    if (vibracaoAtual >= 8) return 'perigo';
-    if (vibracaoAtual >= 5) return 'alerta';
+    if (vibracaoAtual >= 80) return 'perigo';
+    if (vibracaoAtual >= 50) return 'alerta';
     return 'ok';
   }
 }
