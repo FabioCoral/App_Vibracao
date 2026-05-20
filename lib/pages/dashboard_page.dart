@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../repositories/maquina_repository.dart';
 import '../models/registro_vibracao.dart';
 
@@ -15,12 +16,14 @@ class _DashboardPageState extends State<DashboardPage> {
   DateTimeRange? _periodoSelecionado;
   List<RegistroVibracao> _historicoFiltrado = [];
   bool _isCarregandoNuvem = false;
+  int perigo = 80;
+  int alertaPerigo = 50;
 
   Future<void> _abrirFiltroDeData() async {
     final DateTimeRange? selecionado = await showDateRangePicker(
       context: context,
       initialDateRange: _periodoSelecionado,
-      firstDate: DateTime(2023),
+      firstDate: DateTime(2025),
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
@@ -62,27 +65,22 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  // FUNÇÃO MÁGICA: Agrupa por minuto e evita repetição visual na tabela
   List<RegistroVibracao> _removerRepeticoesPorMinuto(
     List<RegistroVibracao> listaOriginal,
   ) {
     final Map<String, RegistroVibracao> mapaAgrupado = {};
 
     for (var registro in listaOriginal) {
-      // Cria uma chave única baseada apenas no "dd/MM HH:mm" (ignorando segundos e milissegundos)
       String chaveMinuto = DateFormat('dd/MM HH:mm').format(registro.dataHora);
 
       if (!mapaAgrupado.containsKey(chaveMinuto)) {
         mapaAgrupado[chaveMinuto] = registro;
       } else {
-        // Se já existe um registro nesse mesmo minuto, mantém o que tiver a maior vibração (pico)
         if (registro.valorVibracao > mapaAgrupado[chaveMinuto]!.valorVibracao) {
           mapaAgrupado[chaveMinuto] = registro;
         }
       }
     }
-
-    // Retorna a lista limpa e mantém a ordenação correta
     return mapaAgrupado.values.toList();
   }
 
@@ -91,12 +89,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final repo = context.watch<MaquinaRepository>();
     final maquinas = repo.maquinas;
 
-    // 1. Define qual fonte de dados usar
     final listaBruta = _periodoSelecionado != null
         ? _historicoFiltrado
         : repo.historicoAlertas;
-
-    // 2. Aplica o filtro para mostrar apenas uma linha por hora/minuto
     final listaParaExibir = _removerRepeticoesPorMinuto(listaBruta);
 
     String getNomeMaquina(String idMaquina) {
@@ -106,6 +101,22 @@ class _DashboardPageState extends State<DashboardPage> {
         return "Máquina ID: $idMaquina";
       }
     }
+
+    int totalPerigo = 0;
+    int totalAlerta = 0;
+    int totalSistema = 0;
+
+    for (var alerta in listaParaExibir) {
+      if (alerta.valorVibracao >= perigo) {
+        totalPerigo++;
+      } else if (alerta.valorVibracao >= alertaPerigo) {
+        totalAlerta++;
+      } else {
+        totalSistema++;
+      }
+    }
+
+    final int totalEventos = listaParaExibir.length;
 
     return Scaffold(
       backgroundColor: Colors.indigo[50],
@@ -143,8 +154,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       fontWeight: FontWeight.bold,
                       color: Colors.indigo,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+
                   if (listaParaExibir.isEmpty)
                     const Center(
                       child: Padding(
@@ -155,7 +168,101 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     )
-                  else
+                  else ...[
+                    Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              "Distribuição de Severidade",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 200,
+                              child: PieChart(
+                                PieChartData(
+                                  sectionsSpace: 4,
+                                  centerSpaceRadius: 40,
+                                  sections: [
+                                    if (totalPerigo > 0)
+                                      PieChartSectionData(
+                                        color: Colors.red[400],
+                                        value: totalPerigo.toDouble(),
+                                        title:
+                                            '${((totalPerigo / totalEventos) * 100).toStringAsFixed(0)}%',
+                                        radius: 50,
+                                        titleStyle: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    if (totalAlerta > 0)
+                                      PieChartSectionData(
+                                        color: Colors.orange[400],
+                                        value: totalAlerta.toDouble(),
+                                        title:
+                                            '${((totalAlerta / totalEventos) * 100).toStringAsFixed(0)}%',
+                                        radius: 50,
+                                        titleStyle: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    if (totalSistema > 0)
+                                      PieChartSectionData(
+                                        color: Colors.blue[400],
+                                        value: totalSistema.toDouble(),
+                                        title:
+                                            '${((totalSistema / totalEventos) * 100).toStringAsFixed(0)}%',
+                                        radius: 50,
+                                        titleStyle: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _ConstruirLegenda(
+                                  cor: Colors.red[400]!,
+                                  texto: "Perigo ($totalPerigo)",
+                                ),
+                                const SizedBox(width: 16),
+                                _ConstruirLegenda(
+                                  cor: Colors.orange[400]!,
+                                  texto: "Alerta ($totalAlerta)",
+                                ),
+                                const SizedBox(width: 16),
+                                _ConstruirLegenda(
+                                  cor: Colors.blue[400]!,
+                                  texto: "Sistema ($totalSistema)",
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -200,11 +307,12 @@ class _DashboardPageState extends State<DashboardPage> {
                             Color corFundo = Colors.blue[100]!;
                             Color corTexto = Colors.blue[900]!;
 
-                            if (vib >= 50.0) {
+                            // Regra universal fixa: 50.0
+                            if (vib >= perigo) {
                               textoTag = "PERIGO";
                               corFundo = Colors.red[100]!;
                               corTexto = Colors.red[900]!;
-                            } else if (vib > 0) {
+                            } else if (vib >= alertaPerigo) {
                               textoTag = "ALERTA";
                               corFundo = Colors.orange[100]!;
                               corTexto = Colors.orange[900]!;
@@ -214,7 +322,6 @@ class _DashboardPageState extends State<DashboardPage> {
                               cells: [
                                 DataCell(
                                   Text(
-                                    // ⚠️ EXIBE APENAS HORA E MINUTO NA TELA
                                     DateFormat(
                                       'dd/MM HH:mm',
                                     ).format(alerta.dataHora),
@@ -257,9 +364,39 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _ConstruirLegenda extends StatelessWidget {
+  final Color cor;
+  final String texto;
+
+  const _ConstruirLegenda({required this.cor, required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: cor),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          texto,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }
