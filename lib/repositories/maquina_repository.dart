@@ -89,7 +89,6 @@ class MaquinaRepository extends ChangeNotifier {
     }
   }
 
-  // 3. ADICIONAR MÁQUINA
   Future<void> adicionarMaquina(Maquina maquina) async {
     try {
       await db.collection('maquinas').doc(maquina.id).set({
@@ -171,6 +170,46 @@ class MaquinaRepository extends ChangeNotifier {
       throw Exception("Erro ao processar alteração: $e");
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<List<RegistroVibracao>> buscarHistoricoFiltrado(
+    DateTime inicio,
+    DateTime fim,
+  ) async {
+    try {
+      DateTime fimAjustado = DateTime(fim.year, fim.month, fim.day, 23, 59, 59);
+
+      print("Buscando histórico de $inicio até $fimAjustado...");
+
+      final snapshot = await db
+          .collection('telemetria')
+          .where(
+            'data_hora',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(inicio),
+          )
+          .where(
+            'data_hora',
+            isLessThanOrEqualTo: Timestamp.fromDate(fimAjustado),
+          )
+          .orderBy('data_hora', descending: true)
+          .get();
+
+      List<RegistroVibracao> resultados = snapshot.docs.map((doc) {
+        final dados = doc.data();
+        return RegistroVibracao(
+          id: doc.id,
+          idMaquina: dados['id_maquina'].toString(),
+          dataHora: (dados['data_hora'] as Timestamp).toDate(),
+          valorVibracao: (dados['vibracao'] as num).toDouble(),
+        );
+      }).toList();
+
+      print("Encontrados ${resultados.length} registros no período.");
+      return resultados;
+    } catch (e) {
+      print("Erro ao buscar histórico filtrado: $e");
+      return [];
     }
   }
 }

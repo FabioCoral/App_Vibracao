@@ -43,6 +43,8 @@ dependencies:
   firebase_auth: ^6.4.0
   cloud_firestore: ^6.3.0
   flutter_dotenv: ^6.0.1
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

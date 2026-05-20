@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // <-- IMPORT ADICIONADO AQUI
 import 'package:provider/provider.dart';
 import 'package:app_vibracao/repositories/auth_repository.dart';
 import 'package:app_vibracao/repositories/maquina_repository.dart';
@@ -32,6 +33,14 @@ class MeuAppVibracao extends StatelessWidget {
     return MaterialApp(
       title: 'Monitor ESP32',
       debugShowCheckedModeBanner: false,
+
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('pt', 'BR')],
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
