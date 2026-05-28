@@ -89,9 +89,11 @@ class _DashboardPageState extends State<DashboardPage> {
     final repo = context.watch<MaquinaRepository>();
     final maquinas = repo.maquinas;
 
+    // Garante que a sessão local também ignora logs com vibração 0
     final listaBruta = _periodoSelecionado != null
         ? _historicoFiltrado
-        : repo.historicoAlertas;
+        : repo.historicoAlertas.where((a) => a.valorVibracao > 0).toList();
+
     final listaParaExibir = _removerRepeticoesPorMinuto(listaBruta);
 
     String getNomeMaquina(String idMaquina) {
@@ -104,15 +106,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
     int totalPerigo = 0;
     int totalAlerta = 0;
-    int totalSistema = 0;
 
     for (var alerta in listaParaExibir) {
       if (alerta.valorVibracao >= perigo) {
         totalPerigo++;
-      } else if (alerta.valorVibracao >= alertaPerigo) {
-        totalAlerta++;
       } else {
-        totalSistema++;
+        totalAlerta++; // Se chegou aqui, já é > 0 por causa do filtro
       }
     }
 
@@ -220,19 +219,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                           color: Colors.white,
                                         ),
                                       ),
-                                    if (totalSistema > 0)
-                                      PieChartSectionData(
-                                        color: Colors.blue[400],
-                                        value: totalSistema.toDouble(),
-                                        title:
-                                            '${((totalSistema / totalEventos) * 100).toStringAsFixed(0)}%',
-                                        radius: 50,
-                                        titleStyle: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
                                   ],
                                 ),
                               ),
@@ -249,11 +235,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                 _ConstruirLegenda(
                                   cor: Colors.orange[400]!,
                                   texto: "Alerta ($totalAlerta)",
-                                ),
-                                const SizedBox(width: 16),
-                                _ConstruirLegenda(
-                                  cor: Colors.blue[400]!,
-                                  texto: "Sistema ($totalSistema)",
                                 ),
                               ],
                             ),
@@ -303,20 +284,16 @@ class _DashboardPageState extends State<DashboardPage> {
                           rows: listaParaExibir.map((alerta) {
                             final double vib = alerta.valorVibracao;
 
-                            String textoTag = "SISTEMA";
-                            Color corFundo = Colors.blue[100]!;
-                            Color corTexto = Colors.blue[900]!;
-
-                            // Regra universal fixa: 50.0
-                            if (vib >= perigo) {
-                              textoTag = "PERIGO";
-                              corFundo = Colors.red[100]!;
-                              corTexto = Colors.red[900]!;
-                            } else if (vib >= alertaPerigo) {
-                              textoTag = "ALERTA";
-                              corFundo = Colors.orange[100]!;
-                              corTexto = Colors.orange[900]!;
-                            }
+                            // Como filtramos vibrações zeradas, só teremos Alerta ou Perigo
+                            String textoTag = vib >= perigo
+                                ? "PERIGO"
+                                : "ALERTA";
+                            Color corFundo = vib >= perigo
+                                ? Colors.red[100]!
+                                : Colors.orange[100]!;
+                            Color corTexto = vib >= perigo
+                                ? Colors.red[900]!
+                                : Colors.orange[900]!;
 
                             return DataRow(
                               cells: [

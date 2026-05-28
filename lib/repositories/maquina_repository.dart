@@ -193,17 +193,21 @@ class MaquinaRepository extends ChangeNotifier {
             isLessThanOrEqualTo: Timestamp.fromDate(fimAjustado),
           )
           .orderBy('data_hora', descending: true)
+          .limit(300)
           .get();
 
-      List<RegistroVibracao> resultados = snapshot.docs.map((doc) {
-        final dados = doc.data();
-        return RegistroVibracao(
-          id: doc.id,
-          idMaquina: dados['id_maquina'].toString(),
-          dataHora: (dados['data_hora'] as Timestamp).toDate(),
-          valorVibracao: (dados['vibracao'] as num).toDouble(),
-        );
-      }).toList();
+      List<RegistroVibracao> resultados = snapshot.docs
+          .map((doc) {
+            final dados = doc.data();
+            return RegistroVibracao(
+              id: doc.id,
+              idMaquina: dados['id_maquina'].toString(),
+              dataHora: (dados['data_hora'] as Timestamp).toDate(),
+              valorVibracao: (dados['vibracao'] as num).toDouble(),
+            );
+          })
+          .where((registro) => registro.valorVibracao > 0)
+          .toList();
 
       print("Encontrados ${resultados.length} registros no período.");
       return resultados;

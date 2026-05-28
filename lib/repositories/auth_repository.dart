@@ -28,8 +28,6 @@ class AuthRepository extends ChangeNotifier {
     try {
       DocumentSnapshot doc = await _db.collection('usuarios').doc(uid).get();
 
-      // ⚠️ SOLUÇÃO DO BUG 1: Se for um cadastro novo, o documento pode demorar
-      // alguns milissegundos para propagar. Damos um pequeno delay e tentamos de novo.
       if (!doc.exists) {
         await Future.delayed(const Duration(milliseconds: 800));
         doc = await _db.collection('usuarios').doc(uid).get();
@@ -44,10 +42,9 @@ class AuthRepository extends ChangeNotifier {
       }
     } catch (e) {
       print("Erro ao carregar perfil: $e");
-      // Se houver erro de permissão no terminal, o app avisará claramente aqui
       if (e.toString().contains('permission-denied')) {
         print(
-          "❌ ALERTA CRÍTICO: Verifique as regras de segurança do seu Firestore no Console!",
+          " ALERTA CRÍTICO: Verifique as regras de segurança do seu Firestore no Console!",
         );
       }
       await logout();
