@@ -18,6 +18,7 @@ class AuthRepository extends ChangeNotifier {
         _carregarPerfilUsuario(user.uid);
       } else {
         isGerente = false;
+        isLoading = false;
         notifyListeners();
       }
     });
@@ -26,14 +27,33 @@ class AuthRepository extends ChangeNotifier {
   Future<void> _carregarPerfilUsuario(String uid) async {
     try {
       DocumentSnapshot doc = await _db.collection('usuarios').doc(uid).get();
+
+      // ⚠️ SOLUÇÃO DO BUG 1: Se for um cadastro novo, o documento pode demorar
+      // alguns milissegundos para propagar. Damos um pequeno delay e tentamos de novo.
+      if (!doc.exists) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        doc = await _db.collection('usuarios').doc(uid).get();
+      }
+
       if (doc.exists) {
         isGerente = doc.get('isGerente') ?? false;
         name = doc.get('nome') ?? "Usuário";
-        isLoading = false;
+      } else {
+        print("Documento de perfil não encontrado no Firestore.");
+        await logout();
       }
-      notifyListeners();
     } catch (e) {
       print("Erro ao carregar perfil: $e");
+      // Se houver erro de permissão no terminal, o app avisará claramente aqui
+      if (e.toString().contains('permission-denied')) {
+        print(
+          "❌ ALERTA CRÍTICO: Verifique as regras de segurança do seu Firestore no Console!",
+        );
+      }
+      await logout();
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 

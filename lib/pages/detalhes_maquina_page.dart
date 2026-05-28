@@ -12,8 +12,8 @@ class DetalhesMaquinaPage extends StatelessWidget {
   DetalhesMaquinaPage({super.key, required this.maquinaSelecionada});
 
   Color _obterCorPorValor(double valor) {
-    if (valor > 8) return Colors.redAccent;
-    if (valor > 5) return Colors.orange;
+    if (valor > 80) return Colors.redAccent;
+    if (valor > 50) return Colors.orange;
     return Colors.teal;
   }
 
