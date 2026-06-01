@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // <-- IMPORT ADICIONADO AQUI
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:app_vibracao/repositories/auth_repository.dart';
 import 'package:app_vibracao/repositories/maquina_repository.dart';

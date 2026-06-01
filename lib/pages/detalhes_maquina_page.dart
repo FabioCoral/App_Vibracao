@@ -52,10 +52,64 @@ class DetalhesMaquinaPage extends StatelessWidget {
                   );
                 }
                 if (result == 'apagar') {
-                  context.read<MaquinaRepository>().removerMaquina(
-                    maquinaAtualizada.id,
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext dialogContext) {
+                      return AlertDialog(
+                        title: const Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.redAccent,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              "Confirmar Exclusão",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        content: Text(
+                          "Você tem certeza que deseja apagar a máquina '${maquinaAtualizada.nome}'?\n\nEsta ação removerá o equipamento do monitoramento e não poderá ser desfeita.",
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text(
+                              "Cancelar",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                            ),
+                            onPressed: () {
+                              context.read<MaquinaRepository>().removerMaquina(
+                                maquinaAtualizada.id,
+                              );
+                              Navigator.pop(dialogContext);
+                              Navigator.pop(context);
+                            },
+                            child: const Text("Apagar Máquina"),
+                          ),
+                        ],
+                      );
+                    },
                   );
-                  Navigator.pop(context);
                 }
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
