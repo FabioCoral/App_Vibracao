@@ -89,7 +89,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final repo = context.watch<MaquinaRepository>();
     final maquinas = repo.maquinas;
 
-    // Garante que a sessão local também ignora logs com vibração 0
     final listaBruta = _periodoSelecionado != null
         ? _historicoFiltrado
         : repo.historicoAlertas.where((a) => a.valorVibracao > 0).toList();
@@ -111,7 +110,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (alerta.valorVibracao >= perigo) {
         totalPerigo++;
       } else {
-        totalAlerta++; // Se chegou aqui, já é > 0 por causa do filtro
+        totalAlerta++;
       }
     }
 
@@ -284,7 +283,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           rows: listaParaExibir.map((alerta) {
                             final double vib = alerta.valorVibracao;
 
-                            // Como filtramos vibrações zeradas, só teremos Alerta ou Perigo
                             String textoTag = vib >= perigo
                                 ? "PERIGO"
                                 : "ALERTA";
