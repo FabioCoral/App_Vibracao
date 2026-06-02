@@ -19,8 +19,16 @@ class MaquinaRepository extends ChangeNotifier {
 
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
+  WebSocketChannel? _canalWs;
+
   MaquinaRepository() {
     _inicializarSistema();
+  }
+
+  Future<void> recarregarDados() async {
+    print(" Recarregando dados e reiniciando conexão WS \n");
+    await _carregarMaquinasDoFirebase();
+    _conectarNaApi();
   }
 
   Future<void> _inicializarSistema() async {
@@ -36,11 +44,13 @@ class MaquinaRepository extends ChangeNotifier {
       for (var doc in snapshot.docs) {
         final dados = doc.data();
 
+        final double vibAtual = _maquinas[doc.id]?.vibracaoAtual ?? 0.0;
+
         _maquinas[doc.id] = Maquina(
           id: doc.id,
           nome: dados['nome'] ?? 'Máquina Desconhecida',
           setor: dados['setor'] ?? 'Sem Setor',
-          vibracaoAtual: 0.0,
+          vibracaoAtual: vibAtual,
         );
       }
       notifyListeners();
@@ -52,6 +62,8 @@ class MaquinaRepository extends ChangeNotifier {
 
   void _conectarNaApi() {
     try {
+      _canalWs?.sink.close();
+
       print("Conectando ao WebSocket em: $urlSuaApiWs...");
       final channel = WebSocketChannel.connect(Uri.parse(urlSuaApiWs));
 

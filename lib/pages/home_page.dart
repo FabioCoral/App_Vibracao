@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthRepository>();
-    final usuario = auth.name; // Pega o usuário do Firebase
+    final usuario = auth.name;
     final isGerente = auth.isGerente;
 
     final maquinaRepo = context.watch<MaquinaRepository>();
@@ -87,7 +87,6 @@ class HomePage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    // ignore: dead_code
                     "Operador: $usuario",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
@@ -129,88 +128,97 @@ class HomePage extends StatelessWidget {
             ),
 
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: listaMaquinas.length,
-              itemBuilder: (context, index) {
-                final maquina = listaMaquinas[index];
-                final corStatus = _obterCorStatus(maquina.status);
+            // === MÁGICA AQUI: RefreshIndicator ===
+            child: RefreshIndicator(
+              color: Colors.indigo,
+              onRefresh: () async {
+                await context.read<MaquinaRepository>().recarregarDados();
+              },
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: listaMaquinas.length,
+                itemBuilder: (context, index) {
+                  final maquina = listaMaquinas[index];
+                  final corStatus = _obterCorStatus(maquina.status);
 
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: corStatus.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: corStatus.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        spreadRadius: 2,
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: corStatus.withValues(alpha: 0.5),
+                        width: 2,
                       ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: corStatus.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.precision_manufacturing,
-                        color: corStatus,
-                      ),
-                    ),
-                    title: Text(
-                      maquina.nome,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Text(
-                      "Setor: ${maquina.setor}\nStatus: ${maquina.status.toUpperCase()}",
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          maquina.vibracaoAtual.toStringAsFixed(1),
-                          style: TextStyle(
-                            color: corStatus,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 22,
-                          ),
-                        ),
-                        const Text(
-                          "mm/s²",
-                          style: TextStyle(fontSize: 10, color: Colors.grey),
+                      boxShadow: [
+                        BoxShadow(
+                          color: corStatus.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          spreadRadius: 2,
                         ),
                       ],
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              DetalhesMaquinaPage(maquinaSelecionada: maquina),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: corStatus.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
+                        child: Icon(
+                          Icons.precision_manufacturing,
+                          color: corStatus,
+                        ),
+                      ),
+                      title: Text(
+                        maquina.nome,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Setor: ${maquina.setor}\nStatus: ${maquina.status.toUpperCase()}",
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            maquina.vibracaoAtual.toStringAsFixed(1),
+                            style: TextStyle(
+                              color: corStatus,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 22,
+                            ),
+                          ),
+                          const Text(
+                            "mm/s²",
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DetalhesMaquinaPage(
+                              maquinaSelecionada: maquina,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],
